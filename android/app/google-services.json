@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "858214490721",
+    "project_id": "ulisync-e4683",
+    "storage_bucket": "ulisync-e4683.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:858214490721:android:e007f80bced3e4e10f8020",
+        "android_client_info": {
+          "package_name": "com.example.ulisync"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBRzwhUVW7qUzoAWbJWdOmppSNXEM_aE0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
