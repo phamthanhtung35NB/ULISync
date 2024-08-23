@@ -77,4 +77,42 @@ class LoginController {
   Future<void> logout() async {
     await _auth.signOut();
   }
+
+
+ Future<String?> changePassword(String currentPassword, String newPassword) async {
+  User? user = _auth.currentUser;
+
+  if (user == null) {
+    return 'No user is currently signed in.';
+  }
+
+  try {
+    // Re-authenticate the user
+    AuthCredential credential = EmailAuthProvider.credential(
+      email: user.email!,
+      password: currentPassword,
+    );
+
+    await user.reauthenticateWithCredential(credential);
+
+    // Update the password
+    await user.updatePassword(newPassword);
+    return 'Mật khẩu đã được cập nhật thành công.';
+  } on FirebaseAuthException catch (e) {
+    return 'Error: ${e.message}';
+  } catch (e) {
+    return 'An error occurred: ${e.toString()}';
+  }
+}
+
+  Future<String?> resetPassword(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      return 'Password reset email has been sent.';
+    } on FirebaseAuthException catch (e) {
+      return 'Error: ${e.message}';
+    } catch (e) {
+      return 'An error occurred: ${e.toString()}';
+    }
+  }
 }

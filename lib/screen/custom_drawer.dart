@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ulis_ync/controller/login_controller.dart';
+
 /**
  * Custom Drawer
  * Bố cục navigation drawer tùy chỉnh
@@ -9,6 +10,65 @@ class CustomDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final LoginController _loginController = LoginController();
+
+    Future<void> _changePassword() async {
+      final TextEditingController currentPasswordController = TextEditingController();
+      final TextEditingController newPasswordController = TextEditingController();
+
+      await showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Đổi mật khẩu'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: currentPasswordController,
+                  decoration: const InputDecoration(
+                    labelText: 'Mật khẩu hiện tại',
+                    border: OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                ),
+                const SizedBox(height: 16.0),
+                TextField(
+                  controller: newPasswordController,
+                  decoration: const InputDecoration(
+                    labelText: 'Mật khẩu mới',
+                    border: OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  String? result = await _loginController.changePassword(
+                    currentPasswordController.text,
+                    newPasswordController.text,
+                  );
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(result ?? 'An error occurred')),
+                  );
+                },
+                child: const Text('Submit'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancel'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
     return Drawer(
       child: Container(
         color: Colors.black,
@@ -62,14 +122,12 @@ class CustomDrawer extends StatelessWidget {
             ),
             ListTile(
               leading: Icon(Icons.swap_horiz, color: Colors.white),
-              title: Text('Switch Account', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                // Switch Account
-              },
+              title: Text('Đổi mật khẩu', style: TextStyle(color: Colors.white)),
+              onTap: _changePassword,
             ),
             ListTile(
               leading: Icon(Icons.exit_to_app, color: Colors.white),
-              title: Text('Log Out', style: TextStyle(color: Colors.white)),
+              title: Text('Đăng xuất', style: TextStyle(color: Colors.white)),
               onTap: () async {
                 // await _loginController.logout();
                 Navigator.of(context).pushNamedAndRemoveUntil('/login_screen', (Route<dynamic> route) => false);

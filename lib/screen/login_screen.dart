@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-// import '../controller/login_controller.dart';
 import 'package:ulis_ync/controller/login_controller.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -22,7 +21,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (result != null) {
       if (result.length == 28) { // Assuming UID is 28 characters long
-      //   if (result.length > 1) { // Assuming UID is 28 characters long
         Navigator.pushNamed(context, '/home_screen', arguments: result);
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -34,6 +32,44 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     }
+  }
+
+  Future<void> _resetPassword() async {
+    final TextEditingController emailController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Reset Password'),
+          content: TextField(
+            controller: emailController,
+            decoration: const InputDecoration(
+              labelText: 'Enter your email',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                String? result = await _loginController.resetPassword(emailController.text);
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(result ?? 'An error occurred')),
+                );
+              },
+              child: const Text('Submit'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -74,6 +110,10 @@ class _LoginScreenState extends State<LoginScreen> {
             ElevatedButton(
               onPressed: _login,
               child: const Text('Đăng nhập'),
+            ),
+            TextButton(
+              onPressed: _resetPassword,
+              child: const Text('Bạn quyêt mật khẩu?'),
             ),
           ],
         ),
