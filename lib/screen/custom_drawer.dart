@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:ulis_ync/controller/login_controller.dart';
 /**
  * Custom Drawer
  * Bố cục navigation drawer tùy chỉnh
@@ -70,8 +70,9 @@ class CustomDrawer extends StatelessWidget {
             ListTile(
               leading: Icon(Icons.exit_to_app, color: Colors.white),
               title: Text('Log Out', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                // Log Out
+              onTap: () async {
+                // await _loginController.logout();
+                Navigator.of(context).pushNamedAndRemoveUntil('/login_screen', (Route<dynamic> route) => false);
               },
             ),
           ],

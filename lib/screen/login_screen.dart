@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+// import '../controller/login_controller.dart';
+import 'package:ulis_ync/controller/login_controller.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,26 +12,27 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final LoginController _loginController = LoginController();
 
   Future<void> _login() async {
-    try {
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: _usernameController.text,
-        password: _passwordController.text,
-      );
-      String uid = userCredential.user!.uid;
-      Navigator.pushNamed(context, '/home', arguments: uid);
-    } on FirebaseAuthException catch (e) {
-      String message;
-      if (e.code == 'user-not-found') {
-        message = 'No user found for that email.';
-      } else if (e.code == 'wrong-password') {
-        message = 'Wrong password provided.';
+    String? result = await _loginController.login(
+      _usernameController.text,
+      _passwordController.text,
+    );
+
+    if (result != null) {
+      if (result.length == 28) { // Assuming UID is 28 characters long
+      //   if (result.length > 1) { // Assuming UID is 28 characters long
+        Navigator.pushNamed(context, '/home_screen', arguments: result);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login successful. UID: $result')),
+        );
       } else {
-        message = 'An error occurred. Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result)),
+        );
       }
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
