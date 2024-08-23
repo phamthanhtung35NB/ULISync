@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ulis_ync/screen/login_screen.dart';
+import 'package:ulis_ync/screen/home_screen.dart';
+import  'package:ulis_ync/screen/login_screen.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -23,7 +24,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const LoginScreen(),
+      home:  LoginScreen(),
     );
   }
 }
