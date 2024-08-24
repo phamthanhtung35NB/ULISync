@@ -29,6 +29,94 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     });
   }
 
+  void _showTaskOptionsDialog(int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Task Options'),
+          content: Text('Do you want to delete or edit this task?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  widget.tasks.removeAt(index);
+                });
+                Navigator.of(context).pop();
+              },
+              child: Text('Delete'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _showEditTaskDialog(index);
+              },
+              child: Text('Edit'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditTaskDialog(int index) {
+    Task task = widget.tasks[index];
+    TextEditingController titleController = TextEditingController(text: task.title);
+    TextEditingController descriptionController = TextEditingController(text: task.description);
+    TextEditingController statusController = TextEditingController(text: task.status);
+    TextEditingController deadlineController = TextEditingController(text: task.deadline.toString());
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Edit Task'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: InputDecoration(labelText: 'Title'),
+              ),
+              TextField(
+                controller: descriptionController,
+                decoration: InputDecoration(labelText: 'Description'),
+              ),
+              TextField(
+                controller: statusController,
+                decoration: InputDecoration(labelText: 'Status'),
+              ),
+              TextField(
+                controller: deadlineController,
+                decoration: InputDecoration(labelText: 'Deadline'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  task.title = titleController.text;
+                  task.description = descriptionController.text;
+                  task.status = statusController.text;
+                  task.deadline = DateTime.parse(deadlineController.text);
+                });
+                Navigator.of(context).pop();
+              },
+              child: Text('Save'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,12 +146,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     children: [
                       Text('Title: ${task.title}', style: TextStyle(fontWeight: FontWeight.bold)),
                       IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () {
-                          setState(() {
-                            widget.tasks.removeAt(index);
-                          });
-                        },
+                        icon: Icon(Icons.more_vert),
+                        onPressed: () => _showTaskOptionsDialog(index),
                       ),
                     ],
                   ),
@@ -74,7 +158,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   SizedBox(height: 8.0),
                   Text('Deadline: ${task.deadline}'),
                   SizedBox(height: 8.0),
-                  TextField(
+                  TextFormField(
                     controller: _linkController,
                     decoration: InputDecoration(
                       labelText: 'Link bài viết',
@@ -82,7 +166,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     ),
                   ),
                   SizedBox(height: 8.0),
-                  TextField(
+                  TextFormField(
                     controller: _imageController,
                     decoration: InputDecoration(
                       labelText: 'Link ảnh',
