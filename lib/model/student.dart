@@ -1,18 +1,16 @@
-import 'group.dart';
-
 class Student {
-  late String name;
-  late int mssv;
-  late List<Group> groups;
+  String id;
+  String name;
+  String email;
 
-  Student(this.name, this.mssv, this.groups);
+  Student({
+    required this.id,
+    required this.name,
+    required this.email,
+  });
 
   @override
   String toString() {
-    return 'Student{name: $name, mssv: $mssv, groups: $groups}';
+    return 'Student{id: $id, name: $name, email: $email}';
   }
-
-
-
-
 }
