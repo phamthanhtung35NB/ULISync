@@ -1,19 +1,71 @@
 import 'package:flutter/material.dart';
 import 'package:ulis_ync/screen/custom_drawer.dart';
-
+import 'package:ulis_ync/screen/task_detail_screen.dart';
+import 'package:ulis_ync/model/task.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    List<List<Task>> teamTasks = [
+      [
+        Task(
+          id: '1',
+          title: 'Task 1 for ELT 1 - GROUP 1',
+          description: 'Description for Task 1',
+          status: 'chưa hoàn thành',
+          deadline: DateTime.now().add(Duration(days: 5)),
+          timeSubmitted: DateTime.now(),
+          linkFile: '',
+          linkImage: '',
+        ),
+        Task(
+          id: '2',
+          title: 'Task 2 for ELT 1 - GROUP 1',
+          description: 'Description for Task 2',
+          status: 'chưa hoàn thành',
+          deadline: DateTime.now().add(Duration(days: 5)),
+          timeSubmitted: DateTime.now(),
+          linkFile: '',
+          linkImage: '',
+        ),
+      ],
+      [
+        Task(
+          id: '3',
+          title: 'Task 1 for GEO 4 - GROUP 6',
+          description: 'Description for Task 1',
+          status: 'chưa hoàn thành',
+          deadline: DateTime.now().add(Duration(days: 5)),
+          timeSubmitted: DateTime.now(),
+          linkFile: '',
+          linkImage: '',
+        ),
+      ],
+      [
+        Task(
+          id: '4',
+          title: 'Task 1 for LING 2 - GROUP 2',
+          description: 'Description for Task 1',
+          status: 'chưa hoàn thành',
+          deadline: DateTime.now().add(Duration(days: 5)),
+          timeSubmitted: DateTime.now(),
+          linkFile: '',
+          linkImage: '',
+        ),
+      ],
+    ];
+
     return Scaffold(
       appBar: AppBar(
         leading: Builder(
           builder: (BuildContext context) {
             return IconButton(
               icon: const Icon(Icons.menu),
-              onPressed: () { Scaffold.of(context).openDrawer(); },
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
             );
           },
         ),
@@ -22,7 +74,7 @@ class HomeScreen extends StatelessWidget {
           IconButton(icon: Icon(Icons.search), onPressed: () {}),
         ],
       ),
-      drawer: const CustomDrawer(), // Thêm Drawer ở đây
+      drawer: const CustomDrawer(),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -36,15 +88,23 @@ class HomeScreen extends StatelessWidget {
           Expanded(
             child: GridView.count(
               crossAxisCount: 3,
-              childAspectRatio: 0.8,
-              children: [
-                TeamCard(image: 'assets/images/team1.jpg', name: 'ELT 1 - GROUP 1'),
-                TeamCard(image: 'assets/images/team2.jpg', name: 'GEO 4 - GROUP 6'),
-                TeamCard(image: 'assets/images/team3.jpg', name: 'LING 2 - GROUP 2'),
-                TeamCard(image: 'assets/images/team1.jpg', name: 'ELT 2 - GROUP 1'),
-                TeamCard(image: 'assets/images/team2.jpg', name: 'GEO 3 - GROUP 6'),
-                TeamCard(image: 'assets/images/team3.jpg', name: 'LING 4 - GROUP 2'),
-              ],
+              padding: const EdgeInsets.fromLTRB(16.0, 8.0, 8.0, 8.0),
+              childAspectRatio: 2.5,
+              mainAxisSpacing: 8.0,
+              crossAxisSpacing: 8.0,
+              children: teamTasks.map((tasks) {
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TaskDetailScreen(tasks: tasks),
+                      ),
+                    );
+                  },
+                  child: TeamCard(tasks: tasks),
+                );
+              }).toList(),
             ),
           ),
         ],
@@ -54,28 +114,44 @@ class HomeScreen extends StatelessWidget {
 }
 
 class TeamCard extends StatelessWidget {
-  final String image;
-  final String name;
+  final List<Task> tasks;
 
-  const TeamCard({Key? key, required this.image, required this.name}) : super(key: key);
+  const TeamCard({Key? key, required this.tasks}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: EdgeInsets.all(8),
-      child: Column(
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset(image, fit: BoxFit.cover),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      elevation: 4,
+      child: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              spreadRadius: 2,
+              blurRadius: 5,
+              offset: Offset(0, 3),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ],
+          ],
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset('assets/images/team1.jpg', fit: BoxFit.cover),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(tasks.first.title.split(' for ').last, style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
       ),
     );
   }
