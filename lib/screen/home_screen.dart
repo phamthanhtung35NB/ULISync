@@ -1,146 +1,68 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:ulis_ync/screen/custom_drawer.dart';
-import 'package:ulis_ync/screen/task_detail_screen.dart';
-import 'package:ulis_ync/model/task.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ulis_ync/model/group.dart';
-import 'package:ulis_ync/model/student.dart';
+import 'package:ulis_ync/screen/task_detail_screen.dart';
+import 'package:ulis_ync/services/firestore_service.dart';
+import 'custom_drawer.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  User? user;
-  String email = 'No email';
+  final FirestoreService _firestoreService = FirestoreService();
+  List<Group> _groups = [];
 
   @override
   void initState() {
     super.initState();
-    user = FirebaseAuth.instance.currentUser;
-    email = user?.email ?? 'No email';
+    _loadGroups();
   }
 
-  List<List<Task>> teamTasks = [
-    [
-      Task(
-        id: '1',
-        title: 'Task 1 for ELT 1 - GROUP 1',
-        description: 'Description for Task 1',
-        status: 'chưa hoàn thành',
-        deadline: DateTime.now().add(Duration(days: 5)),
-        timeSubmitted: DateTime.now(),
-        linkFile: '',
-        linkImage: '',
-      ),
-      Task(
-        id: '2',
-        title: 'Task 2 for ELT 1 - GROUP 1',
-        description: 'Description for Task 2',
-        status: 'chưa hoàn thành',
-        deadline: DateTime.now().add(Duration(days: 5)),
-        timeSubmitted: DateTime.now(),
-        linkFile: '',
-        linkImage: '',
-      ),
-    ],
-    [
-      Task(
-        id: '3',
-        title: 'Task 1 for GEO 4 - GROUP 6',
-        description: 'Description for Task 1',
-        status: 'chưa hoàn thành',
-        deadline: DateTime.now().add(Duration(days: 5)),
-        timeSubmitted: DateTime.now(),
-        linkFile: '',
-        linkImage: '',
-      ),
-    ],
-    [
-      Task(
-        id: '4',
-        title: 'Task 1 for LING 2 - GROUP 2',
-        description: 'Description for Task 1',
-        status: 'chưa hoàn thành',
-        deadline: DateTime.now().add(Duration(days: 5)),
-        timeSubmitted: DateTime.now(),
-        linkFile: '',
-        linkImage: '',
-      ),
-    ],
-  ];
+  Future<void> _loadGroups() async {
+    QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('groups').get();
+    setState(() {
+      _groups = snapshot.docs.map((doc) => Group.fromMap(doc.data() as Map<String, dynamic>)).toList();
+    });
+  }
 
-  List<Group> groups = [
-    Group(
-      id: '1',
-      name: 'ELT 1 - GROUP 1',
-      description: 'Description for ELT 1 - GROUP 1',
-      image: 'assets/images/team1.jpg',
-      students: [
-        Student(id: '1', name: 'Student 1', email: 'student1@vnu.edu.vn'),
-        Student(id: '2', name: 'Student 2', email: 'student2@vnu.edu.vn'),
-      ],
-    ),
-    Group(
-      id: '2',
-      name: 'GEO 4 - GROUP 6',
-      description: 'Description for GEO 4 - GROUP 6',
-      image: 'assets/images/team2.jpg',
-      students: [
-        Student(id: '3', name: 'Student 3', email: 'student3@vnu.edu.vn'),
-      ],
-    ),
-    Group(
-      id: '3',
-      name: 'LING 2 - GROUP 2',
-      description: 'Description for LING 2 - GROUP 2',
-      image: 'assets/images/team3.jpg',
-      students: [
-        Student(id: '4', name: 'Student 4', email: 'student4@vnu.edu.vn'),
-      ],
-    ),
-  ];
+  Future<void> _createNewGroup() async {
+    TextEditingController nameController = TextEditingController();
+    TextEditingController descriptionController = TextEditingController();
 
-  void _createNewTeam() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        TextEditingController teamNameController = TextEditingController();
         return AlertDialog(
-          title: Text('Create New Team'),
-          content: TextField(
-            controller: teamNameController,
-            decoration: InputDecoration(labelText: 'Team Name'),
+          title: Text('Create New Group'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(labelText: 'Group Name'),
+              ),
+              TextField(
+                controller: descriptionController,
+                decoration: InputDecoration(labelText: 'Description'),
+              ),
+            ],
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                setState(() {
-                  teamTasks.add([
-                    Task(
-                      id: DateTime.now().millisecondsSinceEpoch.toString(),
-                      title: 'Task 1 for ${teamNameController.text}',
-                      description: 'Description for Task 1',
-                      status: 'chưa hoàn thành',
-                      deadline: DateTime.now().add(Duration(days: 5)),
-                      timeSubmitted: DateTime.now(),
-                      linkFile: '',
-                      linkImage: '',
-                    ),
-                  ]);
-                  groups.add(
-                    Group(
-                      id: DateTime.now().millisecondsSinceEpoch.toString(),
-                      name: teamNameController.text,
-                      description: 'Description for ${teamNameController.text}',
-                      image: 'assets/images/team1.jpg',
-                      students: [],
-                    ),
-                  );
-                });
+              onPressed: () async {
+                String id = DateTime.now().millisecondsSinceEpoch.toString();
+                Group newGroup = Group(
+                  id: id,
+                  name: nameController.text,
+                  description: descriptionController.text,
+                  image: 'assets/images/team1.jpg',
+                  ownerId: 'currentUserId', // Replace with actual user ID
+                  students: [],
+                );
+                await _firestoreService.createGroup(newGroup);
+                _loadGroups();
                 Navigator.of(context).pop();
               },
               child: Text('Create'),
@@ -164,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
         leading: Builder(
           builder: (BuildContext context) {
             return IconButton(
-                icon: const Icon(Icons.menu),
+              icon: const Icon(Icons.menu),
               onPressed: () {
                 Scaffold.of(context).openDrawer();
               },
@@ -177,66 +99,14 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Text('Home', style: TextStyle(color: Colors.grey)),
               onPressed: () {},
             ),
-            TextButton(
-              child: Text('Projects', style: TextStyle(color: Colors.grey)),
-              onPressed: () {},
-            ),
-            TextButton(
-              child: Text('Planning', style: TextStyle(color: Colors.grey)),
-              onPressed: () {},
-            ),
-            TextButton(
-              child: Text('Reports', style: TextStyle(color: Colors.grey)),
-              onPressed: () {},
-            ),
-            TextButton(
-              child: Text('Calendar', style: TextStyle(color: Colors.grey)),
-              onPressed: () {},
-            ),
-            TextButton(
-              child: Text('People', style: TextStyle(color: Colors.grey)),
-              onPressed: () {},
-            ),
+            // Add other buttons here
           ],
         ),
         actions: [
-          Container(
-            width: 200,
-            margin: EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search Here',
-                prefixIcon: Icon(Icons.search),
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-          IconButton(icon: Icon(Icons.chat_bubble_outline), onPressed: () {}),
-          IconButton(icon: Icon(Icons.notifications_none), onPressed: () {}),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircleAvatar(
-                  radius: 15,
-                  backgroundImage: AssetImage('assets/images/profile_pic.jpg'),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  email,
-                  style: TextStyle(color: Colors.black, fontSize: 10),
-                ),
-              ],
-            ),
-          ),
+          // Add search bar and other actions here
         ],
       ),
-      drawer: const CustomDrawer(),
+      drawer: CustomDrawer(),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -254,17 +124,17 @@ class _HomeScreenState extends State<HomeScreen> {
               childAspectRatio: 2.5,
               mainAxisSpacing: 8.0,
               crossAxisSpacing: 8.0,
-              children: teamTasks.map((tasks) {
+              children: _groups.map((group) {
                 return GestureDetector(
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => TaskDetailScreen(tasks: tasks),
+                        builder: (context) => TaskDetailScreen(groupId: group.id),
                       ),
                     );
                   },
-                  child: TeamCard(tasks: tasks),
+                  child: TeamCard(group: group),
                 );
               }).toList(),
             ),
@@ -272,17 +142,121 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _createNewTeam,
+        onPressed: _createNewGroup,
         child: Icon(Icons.add),
       ),
     );
   }
 }
 
-class TeamCard extends StatelessWidget {
-  final List<Task> tasks;
 
-  const TeamCard({super.key, required this.tasks});
+// import 'package:flutter/material.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:ulis_ync/model/group.dart';
+// import 'package:ulis_ync/screen/task_detail_screen.dart';
+// import 'package:ulis_ync/services/firestore_service.dart';
+// import 'custom_drawer.dart';
+//
+// class HomeScreen extends StatefulWidget {
+//   @override
+//   _HomeScreenState createState() => _HomeScreenState();
+// }
+//
+// class _HomeScreenState extends State<HomeScreen> {
+//   final FirestoreService _firestoreService = FirestoreService();
+//   List<Group> _groups = [];
+//
+//   @override
+//   void initState() {
+//     super.initState();
+//     _loadGroups();
+//   }
+//
+//   Future<void> _loadGroups() async {
+//     QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('groups').get();
+//     setState(() {
+//       _groups = snapshot.docs.map((doc) => Group.fromMap(doc.data() as Map<String, dynamic>)).toList();
+//     });
+//   }
+//
+//   Future<void> _createNewGroup() async {
+//     // Implement group creation logic
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         leading: Builder(
+//           builder: (BuildContext context) {
+//             return IconButton(
+//               icon: const Icon(Icons.menu),
+//               onPressed: () {
+//                 Scaffold.of(context).openDrawer();
+//               },
+//             );
+//           },
+//         ),
+//         title: Row(
+//           children: [
+//             TextButton(
+//               child: Text('Home', style: TextStyle(color: Colors.grey)),
+//               onPressed: () {},
+//             ),
+//             // Add other buttons here
+//           ],
+//         ),
+//         actions: [
+//           // Add search bar and other actions here
+//         ],
+//       ),
+//       drawer: CustomDrawer(),
+//       body: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           const Padding(
+//             padding: EdgeInsets.all(16.0),
+//             child: Text(
+//               'YOUR TEAMS:',
+//               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+//             ),
+//           ),
+//           Expanded(
+//             child: GridView.count(
+//               crossAxisCount: 3,
+//               padding: const EdgeInsets.fromLTRB(16.0, 8.0, 8.0, 8.0),
+//               childAspectRatio: 2.5,
+//               mainAxisSpacing: 8.0,
+//               crossAxisSpacing: 8.0,
+//               children: _groups.map((group) {
+//                 return GestureDetector(
+//                   onTap: () {
+//                     Navigator.push(
+//                       context,
+//                       MaterialPageRoute(
+//                         builder: (context) => TaskDetailScreen(groupId: group.id),
+//                       ),
+//                     );
+//                   },
+//                   child: TeamCard(group: group),
+//                 );
+//               }).toList(),
+//             ),
+//           ),
+//         ],
+//       ),
+//       floatingActionButton: FloatingActionButton(
+//         onPressed: _createNewGroup,
+//         child: Icon(Icons.add),
+//       ),
+//     );
+//   }
+// }
+//
+class TeamCard extends StatelessWidget {
+  final Group group;
+
+  const TeamCard({super.key, required this.group});
 
   @override
   Widget build(BuildContext context) {
@@ -304,8 +278,7 @@ class TeamCard extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('ELT 1 - GROUP 1',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(group.name, style: TextStyle(fontWeight: FontWeight.bold)),
                 PopupMenuButton<String>(
                   onSelected: (String value) {
                     switch (value) {
@@ -321,8 +294,7 @@ class TeamCard extends StatelessWidget {
                     }
                   },
                   itemBuilder: (BuildContext context) {
-                    return {'Add Member', 'Edit Group', 'Delete Group'}.map((
-                        String choice) {
+                    return {'Add Member', 'Edit Group', 'Delete Group'}.map((String choice) {
                       return PopupMenuItem<String>(
                         value: choice,
                         child: Text(choice),
@@ -337,7 +309,7 @@ class TeamCard extends StatelessWidget {
       ),
     );
   }
-
+//
   void _showAddMemberDialog(BuildContext context) {
     TextEditingController emailController = TextEditingController();
     showDialog(
@@ -392,13 +364,13 @@ class TeamCard extends StatelessWidget {
               },
               child: Text('Cancel'),
             ),
-          ],);
-      },);
+          ],
+        );
+      },
+    );
   }
-}
 
-class _deleteGroup {
-  _deleteGroup(BuildContext context) {
+  void _deleteGroup(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {

@@ -9,8 +9,19 @@ class Student {
     required this.email,
   });
 
-  @override
-  String toString() {
-    return 'Student{id: $id, name: $name, email: $email}';
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+    };
+  }
+
+  factory Student.fromMap(Map<String, dynamic> map) {
+    return Student(
+      id: map['id'],
+      name: map['name'],
+      email: map['email'],
+    );
   }
 }

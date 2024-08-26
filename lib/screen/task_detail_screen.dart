@@ -1,55 +1,150 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ulis_ync/model/task.dart';
+import 'package:ulis_ync/services/firestore_service.dart';
+import 'package:ulis_ync/widgets/task_card.dart';
 
 class TaskDetailScreen extends StatefulWidget {
-  final List<Task> tasks;
+  final String groupId;
 
-  const TaskDetailScreen({Key? key, required this.tasks}) : super(key: key);
+  TaskDetailScreen({required this.groupId});
 
   @override
   _TaskDetailScreenState createState() => _TaskDetailScreenState();
 }
 
 class _TaskDetailScreenState extends State<TaskDetailScreen> {
-  final TextEditingController _linkController = TextEditingController();
-  final TextEditingController _imageController = TextEditingController();
+  final FirestoreService _firestoreService = FirestoreService();
+  List<Task> _tasks = [];
+  List<String> _members = [];
 
-  void _addTask() {
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks();
+    _loadMembers();
+  }
+
+  Future<void> _loadTasks() async {
+    QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('tasks').where('groupId', isEqualTo: widget.groupId).get();
     setState(() {
-      widget.tasks.add(Task(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        title: 'New Task',
-        description: 'Description for new task',
-        status: 'chưa hoàn thành',
-        deadline: DateTime.now().add(Duration(days: 5)),
-        timeSubmitted: DateTime.now(),
-        linkFile: '',
-        linkImage: '',
-      ));
+      _tasks = snapshot.docs.map((doc) => Task.fromMap(doc.data() as Map<String, dynamic>)).toList();
     });
   }
 
-  void _showTaskOptionsDialog(int index) {
+  Future<void> _loadMembers() async {
+    DocumentSnapshot groupDoc = await FirebaseFirestore.instance.collection('groups').doc(widget.groupId).get();
+    if (groupDoc.exists) {
+      setState(() {
+        _members = List<String>.from(groupDoc['students']);
+      });
+    }
+  }
+
+  Future<void> _addMember() async {
+    TextEditingController emailController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Add Member'),
+          content: TextField(
+            controller: emailController,
+            decoration: InputDecoration(labelText: 'Member Email'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                await _firestoreService.addMemberToGroup(widget.groupId, emailController.text);
+                _loadMembers();
+                Navigator.of(context).pop();
+              },
+              child: Text('Add'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _createNewTask() async {
+    TextEditingController titleController = TextEditingController();
+    TextEditingController descriptionController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Create New Task'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: InputDecoration(labelText: 'Task Title'),
+              ),
+              TextField(
+                controller: descriptionController,
+                decoration: InputDecoration(labelText: 'Description'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                String id = DateTime.now().millisecondsSinceEpoch.toString();
+                Task newTask = Task(
+                  id: id,
+                  title: titleController.text,
+                  description: descriptionController.text,
+                  groupId: widget.groupId,
+                  deadline: DateTime.now().add(Duration(days: 7)), // Example deadline
+                  timeSubmitted: DateTime.now(),
+                );
+                await _firestoreService.addTask(newTask);
+                _loadTasks();
+                Navigator.of(context).pop();
+              },
+              child: Text('Create'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showTaskOptionsDialog(Task task) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Task Options'),
-          content: Text('Do you want to delete or edit this task?'),
+          content: Text('Do you want to submit or edit this task?'),
           actions: [
             TextButton(
               onPressed: () {
-                setState(() {
-                  widget.tasks.removeAt(index);
-                });
                 Navigator.of(context).pop();
+                _showSubmitTaskDialog(task);
               },
-              child: Text('Delete'),
+              child: Text('Submit'),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                _showEditTaskDialog(index);
+                _showEditTaskDialog(task);
               },
               child: Text('Edit'),
             ),
@@ -59,8 +154,55 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     );
   }
 
-  void _showEditTaskDialog(int index) {
-    Task task = widget.tasks[index];
+  void _showSubmitTaskDialog(Task task) {
+    TextEditingController linkController = TextEditingController();
+    TextEditingController imageController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Submit Task'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: linkController,
+                decoration: InputDecoration(labelText: 'Link bài viết'),
+              ),
+              TextField(
+                controller: imageController,
+                decoration: InputDecoration(labelText: 'Link ảnh'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                setState(() {
+                  task.linkFile = linkController.text;
+                  task.linkImage = imageController.text;
+                  task.isLinkFile = linkController.text.isNotEmpty;
+                  task.isLinkImage = imageController.text.isNotEmpty;
+                });
+                await _firestoreService.updateTask(task);
+                Navigator.of(context).pop();
+              },
+              child: Text('Submit'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditTaskDialog(Task task) {
     TextEditingController titleController = TextEditingController(text: task.title);
     TextEditingController descriptionController = TextEditingController(text: task.description);
     TextEditingController statusController = TextEditingController(text: task.status);
@@ -94,13 +236,14 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 setState(() {
                   task.title = titleController.text;
                   task.description = descriptionController.text;
                   task.status = statusController.text;
                   task.deadline = DateTime.parse(deadlineController.text);
                 });
+                await _firestoreService.updateTask(task);
                 Navigator.of(context).pop();
               },
               child: Text('Save'),
@@ -121,78 +264,40 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.tasks.first.title.split(' for ').last),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: _addTask,
+        title: Text('Tasks'),
+      ),
+      body: Column(
+        children: [
+          ElevatedButton(
+            onPressed: _addMember,
+            child: Text('Add Member'),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _members.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(_members[index]),
+                );
+              },
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _tasks.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () => _showTaskOptionsDialog(_tasks[index]),
+                  child: TaskCard(task: _tasks[index]),
+                );
+              },
+            ),
           ),
         ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16.0),
-        itemCount: widget.tasks.length,
-        itemBuilder: (context, index) {
-          Task task = widget.tasks[index];
-          return Card(
-            margin: EdgeInsets.symmetric(vertical: 8.0),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Title: ${task.title}', style: TextStyle(fontWeight: FontWeight.bold)),
-                      IconButton(
-                        icon: Icon(Icons.more_vert),
-                        onPressed: () => _showTaskOptionsDialog(index),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8.0),
-                  Text('Description: ${task.description}'),
-                  SizedBox(height: 8.0),
-                  Text('Status: ${task.status}'),
-                  SizedBox(height: 8.0),
-                  Text('Deadline: ${task.deadline}'),
-                  SizedBox(height: 8.0),
-                  TextFormField(
-                    controller: _linkController,
-                    decoration: InputDecoration(
-                      labelText: 'Link bài viết',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  SizedBox(height: 8.0),
-                  TextFormField(
-                    controller: _imageController,
-                    decoration: InputDecoration(
-                      labelText: 'Link ảnh',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  SizedBox(height: 8.0),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        task.linkFile = _linkController.text;
-                        task.linkImage = _imageController.text;
-                        task.isLinkFile = _linkController.text.isNotEmpty;
-                        task.isLinkImage = _imageController.text.isNotEmpty;
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Task submitted successfully')),
-                      );
-                    },
-                    child: Text('Nộp bài'),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+      floatingActionButton: FloatingActionButton(
+        onPressed: _createNewTask,
+        child: Icon(Icons.add),
       ),
     );
   }
