@@ -30,7 +30,7 @@ class _GroupScreenState extends State<GroupScreen> {
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: name,
       description: description,
-      image: 'assets/images/team1.jpg',
+      image: 'assets/images/app_logo.png',
       ownerId: widget.userId,
       students: [],
     );

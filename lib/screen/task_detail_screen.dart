@@ -272,16 +272,16 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             onPressed: _addMember,
             child: Text('Add Member'),
           ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _members.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(_members[index]),
-                );
-              },
-            ),
-          ),
+          // Expanded(
+          //   child: ListView.builder(
+          //     itemCount: _members.length,
+          //     itemBuilder: (context, index) {
+          //       return ListTile(
+          //         title: Text(_members[index]),
+          //       );
+          //     },
+          //   ),
+          // ),
           Expanded(
             child: ListView.builder(
               itemCount: _tasks.length,

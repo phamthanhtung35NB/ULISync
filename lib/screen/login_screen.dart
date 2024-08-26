@@ -74,37 +74,44 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-      ),
-      body: Padding(
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('ULISync'),
+    ),
+    body: Center(
+      child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const SizedBox(
-              height: 100.0,
+              height: 400.0,
               child: Image(
-                image: AssetImage('assets/images/ulislogo.png'),
+                image: AssetImage('assets/images/app_logo.png'),
               ),
             ),
             const SizedBox(height: 50.0),
-            TextField(
-              controller: _usernameController,
-              decoration: const InputDecoration(
-                labelText: 'Username',
-                border: OutlineInputBorder(),
+            Container(
+              width: 300.0, // Set the desired width
+              child: TextField(
+                controller: _usernameController,
+                decoration: const InputDecoration(
+                  labelText: 'Email sinh viên',
+                  border: OutlineInputBorder(),
+                ),
               ),
             ),
             const SizedBox(height: 16.0),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
+            Container(
+              width: 300.0, // Set the desired width
+              child: TextField(
+                controller: _passwordController,
+                decoration: const InputDecoration(
+                  labelText: 'Mật khẩu',
+                  border: OutlineInputBorder(),
+                ),
+                obscureText: true,
               ),
-              obscureText: true,
             ),
             const SizedBox(height: 16.0),
             ElevatedButton(
@@ -113,11 +120,12 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             TextButton(
               onPressed: _resetPassword,
-              child: const Text('Bạn quyêt mật khẩu?'),
+              child: const Text('Bạn quên mật khẩu?'),
             ),
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
