@@ -40,76 +40,70 @@
 import 'package:flutter/material.dart';
 import 'package:ulis_ync/controller/login_controller.dart';
 
-/**
- * Custom Drawer
- * Bố cục navigation drawer tùy chỉnh
- */
-class CustomDrawer extends StatelessWidget {
+class CustomDrawer extends StatefulWidget {
   const CustomDrawer({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final LoginController _loginController = LoginController();
+  _CustomDrawerState createState() => _CustomDrawerState();
+}
 
-    Future<void> _changePassword() async {
-      final TextEditingController currentPasswordController =
-          TextEditingController();
-      final TextEditingController newPasswordController =
-          TextEditingController();
+class _CustomDrawerState extends State<CustomDrawer> {
+  final LoginController _loginController = LoginController();
+  String _selectedLanguage = 'English'; // Default language
 
-      await showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('Đổi mật khẩu'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: currentPasswordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Mật khẩu hiện tại',
-                    border: OutlineInputBorder(),
-                  ),
-                  obscureText: true,
+  Future<void> _changePassword() async {
+    final TextEditingController currentPasswordController =
+        TextEditingController();
+    final TextEditingController newPasswordController =
+        TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Đổi mật khẩu'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: currentPasswordController,
+                decoration: const InputDecoration(
+                  labelText: 'Current Password',
                 ),
-                const SizedBox(height: 16.0),
-                TextField(
-                  controller: newPasswordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Mật khẩu mới',
-                    border: OutlineInputBorder(),
-                  ),
-                  obscureText: true,
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  String? result = await _loginController.changePassword(
-                    currentPasswordController.text,
-                    newPasswordController.text,
-                  );
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(result ?? 'An error occurred')),
-                  );
-                },
-                child: const Text('Submit'),
+                obscureText: true,
               ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Cancel'),
+              const SizedBox(height: 16.0),
+              TextField(
+                controller: newPasswordController,
+                decoration: const InputDecoration(
+                  labelText: 'New Password',
+                ),
+                obscureText: true,
               ),
             ],
-          );
-        },
-      );
-    }
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                // Change password logic
+                Navigator.of(context).pop();
+              },
+              child: const Text('Submit'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Drawer(
       child: Container(
         color: Colors.white,
@@ -124,11 +118,8 @@ class CustomDrawer extends StatelessWidget {
                       Colors.white.withOpacity(1), BlendMode.dstATop),
                   image: AssetImage('assets/images/app_logo.png'),
                 ),
-              ), child: null,
-
-                  // color: Colors.white,
-
-
+              ),
+              child: null,
             ),
             ListTile(
               leading: Icon(Icons.work, color: Colors.black),
@@ -180,6 +171,45 @@ class CustomDrawer extends StatelessWidget {
               title:
                   Text('Change Password', style: TextStyle(color: Colors.black)),
               onTap: _changePassword,
+            ),
+            ListTile(
+              leading: Icon(Icons.language, color: Colors.black),
+              title: Text('Change Language', style: TextStyle(color: Colors.black)),
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text('Select Language'),
+                      content: DropdownButton<String>(
+                        value: _selectedLanguage,
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedLanguage = newValue!;
+                          });
+                          Navigator.of(context).pop();
+                        },
+                        items: <String>[
+                          'Vietnamese',
+                          'English',
+                          'Chinese',
+                          'Korean',
+                          'Japanese',
+                          'French',
+                          'German',
+                          'Russian',
+                          'Arabic'
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                      ),
+                    );
+                  },
+                );
+              },
             ),
             ListTile(
               leading: Icon(Icons.exit_to_app, color: Colors.black),
