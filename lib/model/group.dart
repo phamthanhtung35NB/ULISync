@@ -1,12 +1,12 @@
 import 'package:ulis_ync/model/student.dart';
 
 class Group {
-  String id;
-  String name;
-  String description;
-  String image;
-  String ownerId;
-  List<Student> students;
+  final String id;
+  final String name;
+  final String description;
+  final String image;
+  final String ownerId;
+  final List<String> students;
 
   Group({
     required this.id,
@@ -24,18 +24,18 @@ class Group {
       'description': description,
       'image': image,
       'ownerId': ownerId,
-      'students': students.map((student) => student.toMap()).toList(),
+      'students': students, // Ensure students is a list of strings
     };
   }
 
-  factory Group.fromMap(Map<String, dynamic> map) {
+  factory Group.fromMap(Map<String, dynamic> data, String documentId) {
     return Group(
-      id: map['id'],
-      name: map['name'],
-      description: map['description'],
-      image: map['image'],
-      ownerId: map['ownerId'],
-      students: List<Student>.from(map['students']?.map((x) => Student.fromMap(x))),
+      id: documentId,
+      name: data['name'] ?? '',
+      description: data['description'] ?? '',
+      image: data['image'] ?? '',
+      ownerId: data['ownerId'] ?? '',
+      students: List<String>.from(data['students'] ?? []),
     );
   }
 }

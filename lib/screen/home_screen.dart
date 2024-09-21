@@ -28,10 +28,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadGroups() async {
     QuerySnapshot snapshot =
-        await FirebaseFirestore.instance.collection('groups').get();
+    await FirebaseFirestore.instance.collection('groups').get();
     setState(() {
       _groups = snapshot.docs
-          .map((doc) => Group.fromMap(doc.data() as Map<String, dynamic>))
+          .map((doc) => Group.fromMap(doc.data() as Map<String, dynamic>, doc.id))
           .toList();
     });
   }
@@ -54,6 +54,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (groupName.isNotEmpty) {
                   await FirebaseFirestore.instance.collection('groups').add({
                     'name': groupName,
+                    'description': 'Description',
+                    'image': 'assets/images/app_logo.png',
+                    'ownerId': user?.uid,
+                    'students': [],
+                  }).then((value) {
+                    print('Group created successfully');
                   });
                   _loadGroups();
                 }
@@ -207,12 +213,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            TaskDetailScreen(groupId: group.id),
+                        builder: (context) => TaskDetailScreen(groupId: group.id),
                       ),
                     );
                   },
                   child: TeamCard(group: group),
+
                 );
               }).toList(),
             ),
@@ -226,7 +232,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
 class TeamCard extends StatelessWidget {
   final Group group;
 
@@ -252,8 +257,8 @@ class TeamCard extends StatelessWidget {
                   aspectRatio: 2.2,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(1),
-                    child: Image.asset('assets/images/app_logo.png',
-                        fit: BoxFit.cover),
+                    // child: Image.network(group.image, fit: BoxFit.cover),
+                    child: Image.asset('assets/images/app_logo.png', fit: BoxFit.cover),
                   ),
                 ),
               ),
@@ -262,8 +267,7 @@ class TeamCard extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(group.name,
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text(group.name, style: TextStyle(fontWeight: FontWeight.bold)),
                     PopupMenuButton<String>(
                       onSelected: (String value) {
                         switch (value) {
@@ -279,8 +283,7 @@ class TeamCard extends StatelessWidget {
                         }
                       },
                       itemBuilder: (BuildContext context) {
-                        return {'Add Member', 'Edit Group', 'Delete Group'}
-                            .map((String choice) {
+                        return {'Add Member', 'Edit Group', 'Delete Group'}.map((String choice) {
                           return PopupMenuItem<String>(
                             value: choice,
                             child: Text(choice),
@@ -384,6 +387,163 @@ class TeamCard extends StatelessWidget {
     );
   }
 }
+// class TeamCard extends StatelessWidget {
+//   final Group group;
+//
+//   const TeamCard({super.key, required this.group});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       width: 200,
+//       height: 300,
+//       padding: const EdgeInsets.all(1.0),
+//       child: AspectRatio(
+//         aspectRatio: 1,
+//         child: Card(
+//           elevation: 10,
+//           shape: RoundedRectangleBorder(
+//             borderRadius: BorderRadius.circular(8),
+//           ),
+//           child: Column(
+//             children: [
+//               Expanded(
+//                 child: AspectRatio(
+//                   aspectRatio: 2.2,
+//                   child: ClipRRect(
+//                     borderRadius: BorderRadius.circular(1),
+//                     child: Image.asset('assets/images/app_logo.png',
+//                         fit: BoxFit.cover),
+//                   ),
+//                 ),
+//               ),
+//               Padding(
+//                 padding: const EdgeInsets.all(8.0),
+//                 child: Row(
+//                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                   children: [
+//                     Text(group.name,
+//                         style: TextStyle(fontWeight: FontWeight.bold)),
+//                     PopupMenuButton<String>(
+//                       onSelected: (String value) {
+//                         switch (value) {
+//                           case 'Add Member':
+//                             _showAddMemberDialog(context);
+//                             break;
+//                           case 'Edit Group':
+//                             _showEditGroupDialog(context);
+//                             break;
+//                           case 'Delete Group':
+//                             _deleteGroup(context);
+//                             break;
+//                         }
+//                       },
+//                       itemBuilder: (BuildContext context) {
+//                         return {'Add Member', 'Edit Group', 'Delete Group'}
+//                             .map((String choice) {
+//                           return PopupMenuItem<String>(
+//                             value: choice,
+//                             child: Text(choice),
+//                           );
+//                         }).toList();
+//                       },
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+
+  void _showAddMemberDialog(BuildContext context) {
+    TextEditingController emailController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Add Member'),
+          content: TextField(
+            controller: emailController,
+            decoration: InputDecoration(labelText: 'Email'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Add'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditGroupDialog(BuildContext context) {
+    TextEditingController groupNameController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Edit Group'),
+          content: TextField(
+            controller: groupNameController,
+            decoration: InputDecoration(labelText: 'Group Name'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Edit'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteGroup(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Group'),
+          content: Text('Are you sure you want to delete this group?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Yes'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('No'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
 // import 'package:flutter/material.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';
